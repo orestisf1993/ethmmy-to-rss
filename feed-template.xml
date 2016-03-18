@@ -1,21 +1,23 @@
 <rss version="2.0">
     <channel>
-        <title>Extracted</title>
-        <link>https://google.com</link>
+        <title>{{ title }}</title>
+        <link>{{ url }}</link>
         <description>Ανακοινώσεις</description>
-        {%for item in items %}
-        <item>
-            <title>
-                {{item[0]}}
-            </title>
-            <pubDate>
-                {{item[3]}}
-            </pubDate>
-            <link>
-                {{item[1]}}
-            </link>
-            <description>{{item[2]}}</description>
-        </item>
-        {%endfor%}
+        {% for item in items %}
+            <item>
+                <title>
+                    {{ item.title }}
+                </title>
+                <pubDate>
+                    {{ item.date }}
+                </pubDate>
+                <link>
+                    {{ url }}
+                </link>
+                <description>
+                    <![CDATA[{{ item.text }}]]>
+                </description>
+            </item>
+        {% endfor %}
     </channel>
 </rss>

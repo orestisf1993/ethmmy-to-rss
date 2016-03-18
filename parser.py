@@ -1,8 +1,9 @@
 """
 Module that holds functions that handle the parsing of ethmmy pages.
 """
-import re
+import operator
 import os
+import re
 
 try:
     import urlparse
@@ -88,25 +89,28 @@ def extract_announcements(announcement_page, course_name):
     :return: None.
     :rtype: None
     """
-    # TODO: feed title & links.
     from xml.sax.saxutils import escape
     feed_file_name = os.path.join("exported", course_name + '.xml')
     os.makedirs("exported", exist_ok=True)
     titles = announcement_page.find_all('p', {'class': 'listLabel'})
     str_dates = [x.parent.find_all('p')[1].find_all('b')[0].text for x in titles]
-    en_str_dates = [timestr.el_to_en(date) for date in str_dates]
+    dates = [timestr.el_to_datetime(date) for date in str_dates]
+    rss_dates = [timestr.datetime_to_rss(date) for date in dates]
     titles_str = [escape(''.join(title.stripped_strings)) for title in titles]
     messages = [title.parent for title in titles]
     # Delete announcement name from each message:
     for message in messages:
         message.p.extract()
-    # TODO: rss compatible html?
-    messages = [str(message.text) for message in messages]
-    # TODO: better .xml template with named fields not indeces.
-    list_lists = [[title, constants.URL_BASE, message, date] for title, message, date in
-                  zip(titles_str, messages, en_str_dates)]
+
+    # Convert messages to HTML strings.
+    messages = [str(message).strip() for message in messages]
+
+    feed_items = [{'title': title, 'text': text, 'date': date} for title, text, date in
+                  zip(titles_str, messages, rss_dates)]
+    # Sort according to date list. reverse=True => newer are at the beginning.
+    feed_items = [x for (_, x) in sorted(zip(dates, feed_items), key=operator.itemgetter(0), reverse=True)]
 
     env = jinja2.Environment(loader=jinja2.FileSystemLoader("."))
-    result = env.get_template('feed-template.xml').render(items=list_lists)
+    result = env.get_template('feed-template.xml').render(items=feed_items, title=course_name, url=constants.URL_BASE)
     with open(feed_file_name, 'w') as file_obj:
         file_obj.write(result)

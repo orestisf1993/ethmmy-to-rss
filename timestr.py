@@ -3,8 +3,8 @@ Module that handles thread-safe locale setting & converting time strings from Gr
 """
 import locale
 import threading
-from datetime import datetime
 from contextlib import contextmanager
+from datetime import datetime
 
 import constants
 
@@ -28,18 +28,28 @@ def setlocale(name):
             locale.setlocale(locale.LC_ALL, saved)
 
 
-def el_to_en(date):
+def el_to_datetime(date):
     """
     Convert a date string retrieved from ethmmy from Greek to English.
 
     :param date: The Greek date string.
     :type date: str
-    :return: The English date string.
-    :rtype: str
+    :return: The date object.
+    :rtype: datetime.datetime
     """
     correct_short_months = {"Μαρ": "Μάρ", "Νοε": "Νοέ", "Ιουλ": "Ιούλ", "Ιουν": "Ιούν", "Αυγ": "Αύγ", "Μαϊ": "Μάι"}
     with setlocale('el_GR.UTF-8'):
         for wrong, correct in correct_short_months.items():
             date = date.replace(wrong, correct)
-        datetime_date = datetime.strptime(date, constants.ETHMMY_TIME_FORMAT)
-    return datetime_date.strftime(constants.RSS_TIME_FORMAT)
+        return datetime.strptime(date, constants.ETHMMY_TIME_FORMAT)
+
+
+def datetime_to_rss(date):
+    """
+    Convert a datetime object to English rss-accepted date string.
+    :param date: The date.
+    :type date: datetime.datetime
+    :return: The rss-accepted date string.
+    :rtype: str
+    """
+    return date.strftime(constants.RSS_TIME_FORMAT)
