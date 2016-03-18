@@ -128,4 +128,5 @@ Session.vim
 
 *.json
 exported/
+*.html
 

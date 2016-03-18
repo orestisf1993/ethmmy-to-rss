@@ -94,7 +94,8 @@ def extract_announcements(announcement_page, course_name):
     titles_str = [escape(''.join(title.stripped_strings)) for title in titles]
     messages = [title.parent for title in titles]
     # Delete announcement name from each message:
-    [message.p.extract() for message in messages]
+    for message in messages:
+        message.p.extract()
     # TODO: rss compatible html?
     messages = [str(message.text) for message in messages]
     # TODO: better .xml template with named fields not indeces.

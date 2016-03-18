@@ -2,7 +2,6 @@
 """
 Main module with program logic.
 """
-# TODO: pylint
 import sys
 import json
 # TODO: logging
