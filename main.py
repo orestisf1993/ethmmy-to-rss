@@ -5,6 +5,7 @@ Main module with program logic.
 import sys
 import json
 import logging
+import argparse
 
 from bs4 import BeautifulSoup
 import requests
@@ -13,8 +14,7 @@ import keyring  # gnome keyring requires python-secretestorage
 import html_parse
 import constants
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger = None
 
 
 def handle_credentials(username=None):
@@ -108,6 +108,25 @@ def save_username(username):
         json.dump({'username': username}, file_obj)
 
 
+def parse_args():
+    """
+    Parse arguments from stdin.
+
+    :return: argparse object that stores attributes parsed.
+    :rtype: argparse.Namespace
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--debug', help="Print lots of debugging statements", action="store_const",
+                        dest="log_level", const=logging.DEBUG, default=logging.WARNING, )
+    parser.add_argument('-v', '--verbose', help="Be verbose.", action="store_const", dest="log_level",
+                        const=logging.INFO, )
+    parser.add_argument('-q', '--quiet', help="Only print errors.", action="store_const", dest="log_level",
+                        const=logging.ERROR)
+    parser.add_argument('-n', '--new-login', help="Forget old username and enter a new one.", action="store_true",
+                        dest="new_login", default=False)
+    return parser.parse_args()
+
+
 def main():
     """
     Main function that submits username & password and creates the connection with ethmmy.
@@ -116,10 +135,16 @@ def main():
     :rtype: int
     """
 
-    # TODO: argparse
-    # --one-file vs --multi-file
+    args = parse_args()
+    global logger
+    logging.basicConfig(level=args.log_level)
+    logger = logging.getLogger(__name__)
+    logger.debug("Initialized logger at log_level:%s", str(args.log_level))
 
-    username = load_username()
+    if args.new_login:
+        username = None
+    else:
+        username = load_username()
     logger.info("Acquiring username & password.")
     username, password = handle_credentials(username)
     logger.info("Saving username.")
