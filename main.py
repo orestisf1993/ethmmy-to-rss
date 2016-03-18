@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import requests
 import keyring  # gnome keyring requires python-secretestorage
 
-import parser
+import html_parse
 import constants
 
 logging.basicConfig(level=logging.DEBUG)
@@ -128,18 +128,18 @@ def main():
     session, response = login(username, password)
 
     soup = BeautifulSoup(response.text, "html.parser")
-    url_texts, urls = parser.find_all_course_urls(soup)
+    url_texts, urls = html_parse.find_all_course_urls(soup)
     for name, url in zip(url_texts, urls):
         logger.info("Downloading course page for %s at %s.", name, url)
         response = session.get(url)
         course_page = BeautifulSoup(response.text, "html.parser")
         logger.info("Searching for announcement url for %s.", name)
-        announcement_url = parser.get_announcement_page_url(course_page)
+        announcement_url = html_parse.get_announcement_page_url(course_page)
         logger.info("Downloading announcement page for %s from %s.", name, announcement_url)
         response = session.get(announcement_url)
         announcement_page = BeautifulSoup(response.text, "html.parser")
         logger.info("Extracting announcements for %s.", name)
-        parser.extract_announcements(announcement_page, name)
+        html_parse.extract_announcements(announcement_page, name)
 
     return 0
 
