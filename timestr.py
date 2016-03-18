@@ -13,6 +13,13 @@ LOCALE_LOCK = threading.Lock()
 
 @contextmanager
 def setlocale(name):
+    """
+    Change the local in current context. Restore it on closing.
+
+    :param name: The locale.
+    :return: None.
+    :rtype: None
+    """
     with LOCALE_LOCK:
         saved = locale.setlocale(locale.LC_ALL)
         try:
@@ -22,6 +29,14 @@ def setlocale(name):
 
 
 def el_to_en(date):
+    """
+    Convert a date string retrieved from ethmmy from Greek to English.
+
+    :param date: The Greek date string.
+    :type date: str
+    :return: The English date string.
+    :rtype: str
+    """
     correct_short_months = {"Μαρ": "Μάρ", "Νοε": "Νοέ", "Ιουλ": "Ιούλ", "Ιουν": "Ιούν", "Αυγ": "Αύγ", "Μαϊ": "Μάι"}
     with setlocale('el_GR.UTF-8'):
         for wrong, correct in correct_short_months.items():

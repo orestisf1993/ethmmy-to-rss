@@ -2,8 +2,6 @@
 """
 Main module with program logic.
 """
-# TODO: docstrings
-# TODO: main logic to combine parser
 # TODO: pylint
 import sys
 import json
@@ -21,8 +19,10 @@ def handle_credentials(username=None):
     """
     Handle the login credentials.
 
-    :param username:
-    :return:
+    :param username: The username to use for login.
+    :type username: str
+    :return: The username and password combo.
+    :rtype: (str, str)
     """
     if username is None:
         password = None
@@ -40,7 +40,10 @@ def set_credentials(username=None):
     """
     Ask user for credentials and save them via keyring module.
 
-    :return:
+    :param username: The username to use.
+    :type username: str
+    :return: The username and password combo.
+    :rtype: (str, str)
     """
     import getpass
     if username is None:
@@ -51,6 +54,12 @@ def set_credentials(username=None):
 
 
 def load_username():
+    """
+    Load the saved username from the config file.
+
+    :return: The username if found, None otherwise.
+    :rtype: str or None
+    """
     try:
         with open(constants.CONFIG_FILE_NAME, 'r') as file_obj:
             return json.load(file_obj)['username']
@@ -59,14 +68,22 @@ def load_username():
 
 
 def login(username, password):
+    """
+    Start a new session with ethmmy.
+
+    :param username: The username to use.
+    :type username: str
+    :param password: The password to use.
+    :type password: str
+    :return: The session and the response.
+    :rtype: (requests.Session, requests.Response)
+    """
     # Start a session so we can have persistent cookies.
     session = requests.session()
 
     # This is the form data that the page sends when logging in.
     login_data = {
-        'username': username,
-        'password': password,
-        'submit': 'Υποβολή',
+        'username': username, 'password': password, 'submit': 'Υποβολή',
     }
 
     # Authenticate.
@@ -75,6 +92,13 @@ def login(username, password):
 
 
 def save_username(username):
+    """
+    Save the username to the config file.
+    :param username: The username.
+    :type username: str
+    :return: None.
+    :rtype: None
+    """
     with open(constants.CONFIG_FILE_NAME, 'w') as file_obj:
         json.dump({'username': username}, file_obj)
 
@@ -83,7 +107,8 @@ def main():
     """
     Main function that submits username & password and creates the connection with ethmmy.
 
-    :return:
+    :return: 0 on successful execution.
+    :rtype: int
     """
 
     # TODO: argparse
@@ -104,10 +129,6 @@ def main():
         response = session.get(announcement_url)
         announcement_page = BeautifulSoup(response.text, "html.parser")
         parser.extract_announcements(announcement_page, name)
-
-    # TODO: delete
-    # Start IPython for debugging.
-    # __import__("IPython").embed()
 
     return 0
 

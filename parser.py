@@ -1,3 +1,6 @@
+"""
+Module that holds functions that handle the parsing of ethmmy pages.
+"""
 import re
 import os
 
@@ -19,6 +22,7 @@ def get_absolute_url(url):
     :param url: The URL.
     :type: str
     :return: The absolute URL.
+    :rtype: str
     """
     return url if is_absolute(url) else urlparse.urljoin(constants.URL_BASE, url)
 
@@ -35,10 +39,18 @@ def is_absolute(url):
     return bool(urlparse.urlparse(url).netloc)
 
 
-def find_all_course_urls(
-        main_page,
-        regex=re.compile(r'/eTHMMY/cms\.course\.login\.do'),
-        ignore=('φοιτητικοι διαγωνισμοι',)):
+def find_all_course_urls(main_page, regex=re.compile(r'/eTHMMY/cms\.course\.login\.do'),
+                         ignore=('φοιτητικοι διαγωνισμοι',)):
+    """
+    Find all the URLs to point to a course page from a page.
+    :param main_page: The page to search the URLs in.
+    :type main_page: bs4.BeautifulSoup
+    :param regex: The regex to use for searching.
+    :param ignore: Courses to ignore.
+    :type ignore: iterable
+    :return: The course URLs.
+    :rtype: list
+    """
     # TODO: explain
     search_results = main_page.find_all('a', href=regex)
     search_results = [result for result in search_results if result.text.lower() not in ignore]
@@ -51,10 +63,27 @@ def find_all_course_urls(
 
 
 def get_announcement_page_url(course_page, regex=re.compile(r'/eTHMMY/cms\.announcement\.data\.do')):
+    """
+    Get the URL for the announcement page from a course page.
+
+    :param course_page: The course page.
+    :type course_page: bs4.BeautifulSoup
+    :param regex: The regex to use for searching.
+    :return: The URL.
+    :rtype: str
+    """
     return get_absolute_url(course_page.find('a', href=regex).get('href'))
 
 
 def extract_announcements(announcement_page, course_name):
+    """
+    Save all announcements from a specified announcement page in rss .xml format in specified file in exported/ folder.
+
+    :param announcement_page: The announcement page.
+    :param course_name: The course name. Also used for the filename.
+    :return: None.
+    :rtype: None
+    """
     # TODO: feed title & links.
     from xml.sax.saxutils import escape
     feed_file_name = os.path.join("exported", course_name + '.xml')
