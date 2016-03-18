@@ -4,7 +4,7 @@ Main module with program logic.
 """
 import sys
 import json
-# TODO: logging
+import logging
 
 from bs4 import BeautifulSoup
 import requests
@@ -12,6 +12,9 @@ import keyring  # gnome keyring requires python-secretestorage
 
 import parser
 import constants
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def handle_credentials(username=None):
@@ -61,6 +64,7 @@ def load_username():
     """
     try:
         with open(constants.CONFIG_FILE_NAME, 'r') as file_obj:
+            logger.info("Load username from file %s.", constants.CONFIG_FILE_NAME)
             return json.load(file_obj)['username']
     except FileNotFoundError:
         return None
@@ -86,6 +90,7 @@ def login(username, password):
     }
 
     # Authenticate.
+    logger.info("Sending login data to ethmmy")
     response = session.post(constants.LOGIN_URL, data=login_data)
     return session, response
 
@@ -99,6 +104,7 @@ def save_username(username):
     :rtype: None
     """
     with open(constants.CONFIG_FILE_NAME, 'w') as file_obj:
+        logging.info("Saving username %s at file %s.", username, constants.CONFIG_FILE_NAME)
         json.dump({'username': username}, file_obj)
 
 
@@ -114,19 +120,25 @@ def main():
     # --one-file vs --multi-file
 
     username = load_username()
+    logger.info("Acquiring username & password.")
     username, password = handle_credentials(username)
+    logger.info("Saving username.")
     save_username(username)
+    logger.info("Attempting login.")
     session, response = login(username, password)
-    # TODO: error checking.
 
     soup = BeautifulSoup(response.text, "html.parser")
     url_texts, urls = parser.find_all_course_urls(soup)
     for name, url in zip(url_texts, urls):
+        logger.info("Downloading course page for %s at %s.", name, url)
         response = session.get(url)
         course_page = BeautifulSoup(response.text, "html.parser")
+        logger.info("Searching for announcement url for %s.", name)
         announcement_url = parser.get_announcement_page_url(course_page)
+        logger.info("Downloading announcement page for %s from %s.", name, announcement_url)
         response = session.get(announcement_url)
         announcement_page = BeautifulSoup(response.text, "html.parser")
+        logger.info("Extracting announcements for %s.", name)
         parser.extract_announcements(announcement_page, name)
 
     return 0
