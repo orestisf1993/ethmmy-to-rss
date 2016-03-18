@@ -48,15 +48,19 @@ def find_all_course_urls(main_page, regex=re.compile(r'/eTHMMY/cms\.course\.logi
     :param regex: The regex to use for searching.
     :param ignore: Courses to ignore.
     :type ignore: iterable
-    :return: The course URLs.
-    :rtype: list
+    :return: The course names + URLs.
+    :rtype: [list, list]
     """
-    # TODO: explain
+    # Search all links.
     search_results = main_page.find_all('a', href=regex)
+    # Remove ignored courses.
     search_results = [result for result in search_results if result.text.lower() not in ignore]
+    # Keep only those having the image, to avoid adding the current course link.
     search_results = [result for result in search_results if result.img]
+    # Remove unneeded whitespace in course names.
     url_texts = [result.text.replace('\n', ' ').replace('\r', '').replace('\t', ' ') for result in search_results]
     url_texts = [re.sub(r'\s+', ' ', text).strip() for text in url_texts]
+    # Get the URLs from search_results and convert them to absolute.
     urls = [result.get('href') for result in search_results]
     urls = [get_absolute_url(url) for url in urls]
     return url_texts, urls
