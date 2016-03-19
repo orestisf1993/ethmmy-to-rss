@@ -13,8 +13,8 @@ except ImportError:
 
 import jinja2
 
-import constants
-import timestr
+from . import constants
+from . import timestr
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +118,7 @@ def extract_announcements(announcement_page, course_name):
     feed_items = [x for (_, x) in sorted(zip(dates, feed_items), key=operator.itemgetter(0), reverse=True)]
 
     logger.debug("Loading jinja2 template.")
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader("."))
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
     result = env.get_template('feed-template.xml').render(items=feed_items, title=course_name, url=constants.URL_BASE)
     with open(feed_file_name, 'w') as file_obj:
         logger.info("Saving feed for %s at file %s.", course_name, feed_file_name)

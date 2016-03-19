@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 import requests
 import keyring  # gnome keyring requires python-secretestorage
 
-import html_parse
-import constants
+from . import html_parse
+from . import constants
 
 logger = None
 

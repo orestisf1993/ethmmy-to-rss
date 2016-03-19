@@ -6,7 +6,7 @@ import threading
 from contextlib import contextmanager
 from datetime import datetime
 
-import constants
+from . import constants
 
 LOCALE_LOCK = threading.Lock()
 
