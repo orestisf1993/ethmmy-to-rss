@@ -1,31 +1,15 @@
 """
-Module that handles thread-safe locale setting & converting time strings from Greek to English.
+Module that uses icu & datetime to convert time string. from eTHMMY's (Greek) locale to english rss-friendly time
+strings.
 """
-import locale
-import threading
-from contextlib import contextmanager
+
 from datetime import datetime
+import icu
 
-from . import constants
+from ethmmyrss import constants
 
-LOCALE_LOCK = threading.Lock()
-
-
-@contextmanager
-def setlocale(name):
-    """
-    Change the local in current context. Restore it on closing.
-
-    :param name: The locale.
-    :return: None.
-    :rtype: None
-    """
-    with LOCALE_LOCK:
-        saved = locale.setlocale(locale.LC_ALL)
-        try:
-            yield locale.setlocale(locale.LC_ALL, name)
-        finally:
-            locale.setlocale(locale.LC_ALL, saved)
+ETHMMY_LOCALE = icu.Locale('el_GR')
+ETHMMY_DATE_PARSER = icu.SimpleDateFormat(constants.ETHMMY_TIME_FORMAT, ETHMMY_LOCALE)
 
 
 def el_to_datetime(date):
@@ -37,11 +21,7 @@ def el_to_datetime(date):
     :return: The date object.
     :rtype: datetime.datetime
     """
-    correct_short_months = {"Μαρ": "Μάρ", "Νοε": "Νοέ", "Ιουλ": "Ιούλ", "Ιουν": "Ιούν", "Αυγ": "Αύγ", "Μαϊ": "Μάι"}
-    with setlocale('el_GR.UTF-8'):
-        for wrong, correct in correct_short_months.items():
-            date = date.replace(wrong, correct)
-        return datetime.strptime(date, constants.ETHMMY_TIME_FORMAT)
+    return datetime.fromtimestamp(ETHMMY_DATE_PARSER.parse(date))
 
 
 def datetime_to_rss(date):
