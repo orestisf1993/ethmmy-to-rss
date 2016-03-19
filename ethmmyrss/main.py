@@ -161,6 +161,12 @@ def main():
     logging.basicConfig(level=args.log_level)
     logger = logging.getLogger(__name__)
     logger.debug("Initialized logger at log_level:%s", str(args.log_level))
+    logger.info("Program called with arguments: new-login={}, use-keyring={}, ssl-verify={}, loop={}".format(
+        args.new_login,
+        args.use_keyring,
+        args.ssl_verify,
+        args.loop
+    ))
 
     if args.new_login:
         username = None
