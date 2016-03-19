@@ -5,6 +5,7 @@ import operator
 import os
 import re
 import logging
+import uuid
 
 try:
     import urlparse
@@ -115,8 +116,12 @@ def extract_announcements(announcement_page, course_name, output_folder):
     # Convert messages to HTML strings.
     messages = [str(message).strip() for message in messages]
 
-    feed_items = [{'title': title, 'text': text, 'date': date} for title, text, date in
-                  zip(titles_str, messages, rss_dates)]
+    feed_items = [
+        {
+            'title': title, 'text': text, 'date': date, 'url': constants.URL_BASE + str(uuid.uuid4())
+        }
+        for title, text, date in zip(titles_str, messages, rss_dates)
+    ]
     # Sort according to date list. reverse=True => newer are at the beginning.
     feed_items = [x for (_, x) in sorted(zip(dates, feed_items), key=operator.itemgetter(0), reverse=True)]
 
