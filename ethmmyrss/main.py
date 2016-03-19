@@ -17,12 +17,14 @@ from . import constants
 logger = None
 
 
-def handle_credentials(username=None):
+def handle_credentials(username=None, use_keyring=True):
     """
     Handle the login credentials.
 
     :param username: The username to use for login.
     :type username: str
+    :param use_keyring: True if the keyring is to be used to save the user's password.
+    :type use_keyring: bool
     :return: The username and password combo.
     :rtype: (str, str)
     """
@@ -30,20 +32,25 @@ def handle_credentials(username=None):
         password = None
         msg = 'No credentials found.\n'
     else:
-        password = keyring.get_password(constants.KEYRING_SERVICE, username)
+        if use_keyring:
+            password = keyring.get_password(constants.KEYRING_SERVICE, username)
+        else:
+            password = None
         msg = 'No password found for username {}.\n'.format(username)
     if not password:
         print(msg, end='')
-        username, password = set_credentials()
+        username, password = set_credentials(username, use_keyring=use_keyring)
     return username, password
 
 
-def set_credentials(username=None):
+def set_credentials(username=None, use_keyring=True):
     """
     Ask user for credentials and save them via keyring module.
 
     :param username: The username to use.
     :type username: str
+    :param use_keyring: True if the keyring is to be used to save the user's password.
+    :type use_keyring: bool
     :return: The username and password combo.
     :rtype: (str, str)
     """
@@ -51,7 +58,8 @@ def set_credentials(username=None):
     if username is None:
         username = input('Username:')
     new_password = getpass.getpass()
-    keyring.set_password(constants.KEYRING_SERVICE, username, new_password)
+    if use_keyring:
+        keyring.set_password(constants.KEYRING_SERVICE, username, new_password)
     return username, new_password
 
 
@@ -124,6 +132,8 @@ def parse_args():
                         const=logging.ERROR)
     parser.add_argument('-n', '--new-login', help="Forget old username and enter a new one.", action="store_true",
                         dest="new_login", default=False)
+    parser.add_argument('--no-keyring', help="Don't save the password in a secure keyring.", action="store_false",
+                        dest="use_keyring", default=True)
     return parser.parse_args()
 
 
@@ -146,7 +156,7 @@ def main():
     else:
         username = load_username()
     logger.info("Acquiring username & password.")
-    username, password = handle_credentials(username)
+    username, password = handle_credentials(username, use_keyring=args.use_keyring)
     logger.info("Saving username.")
     save_username(username)
     logger.info("Attempting login.")
