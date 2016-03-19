@@ -208,6 +208,7 @@ def main():
             logger.info("Extracting announcements for %s.", name)
             html_parse.extract_announcements(announcement_page, name)
 
+        session.close()
         after_loop_action()
 
 
