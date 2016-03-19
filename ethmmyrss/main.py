@@ -7,6 +7,7 @@ import json
 import logging
 import argparse
 
+import time
 from bs4 import BeautifulSoup
 import requests
 import keyring  # gnome keyring requires python-secretestorage
@@ -138,6 +139,13 @@ def parse_args():
                         dest="use_keyring", default=True)
     parser.add_argument('--no-ssl-verify', help="Don't use ssl certificates to verify connections.",
                         action="store_false", dest="ssl_verify", default=True)
+    parser.add_argument('--loop',
+                        help="If this flag is passed program will loop forever. If a value is specified the program "
+                             "will use this value as a delay after each loop in seconds.",
+                        nargs='?',
+                        const=0,
+                        type=int
+                        )
     return parser.parse_args()
 
 
@@ -145,8 +153,7 @@ def main():
     """
     Main function that submits username & password and creates the connection with ethmmy.
 
-    :return: 0 on successful execution.
-    :rtype: int
+    :return: Nothing, doesn't return.
     """
 
     args = parse_args()
@@ -163,25 +170,40 @@ def main():
     username, password = handle_credentials(username, use_keyring=args.use_keyring)
     logger.info("Saving username.")
     save_username(username)
-    logger.info("Attempting login.")
-    session, response = login(username, password, args.ssl_verify)
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    url_texts, urls = html_parse.find_all_course_urls(soup)
-    for name, url in zip(url_texts, urls):
-        logger.info("Downloading course page for %s at %s.", name, url)
-        response = session.get(url, verify=args.ssl_verify)
-        course_page = BeautifulSoup(response.text, "html.parser")
-        logger.info("Searching for announcement url for %s.", name)
-        announcement_url = html_parse.get_announcement_page_url(course_page)
-        logger.info("Downloading announcement page for %s from %s.", name, announcement_url)
-        response = session.get(announcement_url, verify=args.ssl_verify)
-        announcement_page = BeautifulSoup(response.text, "html.parser")
-        logger.info("Extracting announcements for %s.", name)
-        html_parse.extract_announcements(announcement_page, name)
+    def after_loop_action():
+        """
+        Wait args.loop seconds if looping is enabled. Exit if not.
 
-    return 0
+        :return: None.
+        :rtype: None
+        """
+        if args.loop is not None:
+            logger.info("Sleeping for %d.", args.loop)
+            time.sleep(args.loop)
+        else:
+            sys.exit(0)
+
+    while True:
+        logger.info("Attempting login.")
+        session, response = login(username, password, args.ssl_verify)
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        url_texts, urls = html_parse.find_all_course_urls(soup)
+        for name, url in zip(url_texts, urls):
+            logger.info("Downloading course page for %s at %s.", name, url)
+            response = session.get(url, verify=args.ssl_verify)
+            course_page = BeautifulSoup(response.text, "html.parser")
+            logger.info("Searching for announcement url for %s.", name)
+            announcement_url = html_parse.get_announcement_page_url(course_page)
+            logger.info("Downloading announcement page for %s from %s.", name, announcement_url)
+            response = session.get(announcement_url, verify=args.ssl_verify)
+            announcement_page = BeautifulSoup(response.text, "html.parser")
+            logger.info("Extracting announcements for %s.", name)
+            html_parse.extract_announcements(announcement_page, name)
+
+        after_loop_action()
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
