@@ -158,7 +158,11 @@ def main():
 
     args = parse_args()
     global logger
-    logging.basicConfig(level=args.log_level)
+    logging.basicConfig(
+        level=args.log_level,
+        datefmt="%Y-%m-%d %H:%M:%S",
+        format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s"
+    )
     logger = logging.getLogger(__name__)
     logger.debug("Initialized logger at log_level:%s", str(args.log_level))
     logger.info("Program called with arguments: new-login={}, use-keyring={}, ssl-verify={}, loop={}".format(
@@ -185,7 +189,7 @@ def main():
         :rtype: None
         """
         if args.loop is not None:
-            logger.info("Sleeping for %d.", args.loop)
+            logger.info("Sleeping for %d seconds.", args.loop)
             time.sleep(args.loop)
         else:
             sys.exit(0)
