@@ -4,12 +4,25 @@ strings.
 """
 
 from datetime import datetime
-import icu
 
 from ethmmyrss import constants
 
-ETHMMY_LOCALE = icu.Locale('el_GR')
-ETHMMY_DATE_PARSER = icu.SimpleDateFormat(constants.ETHMMY_TIME_FORMAT, ETHMMY_LOCALE)
+TIME_TRANSLATE = {
+    'Ιαν': 'Jan',
+    'Φεβ': 'Feb',
+    'Μαρ': 'Mar',
+    'Απρ': 'Apr',
+    'Μαϊ': 'May',
+    'Ιουν': 'Jun',
+    'Ιουλ': 'Jul',
+    'Αυγ': 'Aug',
+    'Σεπ': 'Sep',
+    'Οκτ': 'Oct',
+    'Νοε': 'Nov',
+    'Δεκ': 'Dec',
+    'μμ': 'pm',
+    'πμ': 'am'
+}
 
 
 def el_to_datetime(date):
@@ -21,7 +34,9 @@ def el_to_datetime(date):
     :return: The date object.
     :rtype: datetime.datetime
     """
-    return datetime.fromtimestamp(ETHMMY_DATE_PARSER.parse(date))
+    for greek, english in TIME_TRANSLATE.items():
+        date = date.replace(greek, english)
+    return datetime.strptime(date, constants.ETHMMY_TIME_FORMAT)
 
 
 def datetime_to_rss(date):
