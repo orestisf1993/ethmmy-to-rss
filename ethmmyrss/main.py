@@ -78,7 +78,7 @@ def load_username():
         return None
 
 
-def login(username, password):
+def login(username, password, verify=True):
     """
     Start a new session with ethmmy.
 
@@ -86,6 +86,8 @@ def login(username, password):
     :type username: str
     :param password: The password to use.
     :type password: str
+    :param verify: True if ssl connection should be verified.
+    :type verify: bool
     :return: The session and the response.
     :rtype: (requests.Session, requests.Response)
     """
@@ -99,7 +101,7 @@ def login(username, password):
 
     # Authenticate.
     logger.info("Sending login data to ethmmy")
-    response = session.post(constants.LOGIN_URL, data=login_data)
+    response = session.post(constants.LOGIN_URL, data=login_data, verify=verify)
     return session, response
 
 
@@ -134,6 +136,8 @@ def parse_args():
                         dest="new_login", default=False)
     parser.add_argument('--no-keyring', help="Don't save the password in a secure keyring.", action="store_false",
                         dest="use_keyring", default=True)
+    parser.add_argument('--no-ssl-verify', help="Don't use ssl certificates to verify connections.",
+                        action="store_false", dest="ssl_verify", default=True)
     return parser.parse_args()
 
 
@@ -160,18 +164,18 @@ def main():
     logger.info("Saving username.")
     save_username(username)
     logger.info("Attempting login.")
-    session, response = login(username, password)
+    session, response = login(username, password, args.ssl_verify)
 
     soup = BeautifulSoup(response.text, "html.parser")
     url_texts, urls = html_parse.find_all_course_urls(soup)
     for name, url in zip(url_texts, urls):
         logger.info("Downloading course page for %s at %s.", name, url)
-        response = session.get(url)
+        response = session.get(url, verify=args.ssl_verify)
         course_page = BeautifulSoup(response.text, "html.parser")
         logger.info("Searching for announcement url for %s.", name)
         announcement_url = html_parse.get_announcement_page_url(course_page)
         logger.info("Downloading announcement page for %s from %s.", name, announcement_url)
-        response = session.get(announcement_url)
+        response = session.get(announcement_url, verify=args.ssl_verify)
         announcement_page = BeautifulSoup(response.text, "html.parser")
         logger.info("Extracting announcements for %s.", name)
         html_parse.extract_announcements(announcement_page, name)
