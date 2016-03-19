@@ -146,6 +146,12 @@ def parse_args():
                         const=0,
                         type=int
                         )
+    parser.add_argument('--output-dir', '-o',
+                        help="Directory to use for resulting .xml files.",
+                        action='store',
+                        dest='output_dir',
+                        default='exported'
+                        )
     return parser.parse_args()
 
 
@@ -210,7 +216,7 @@ def main():
             response = session.get(announcement_url, verify=args.ssl_verify)
             announcement_page = BeautifulSoup(response.text, "html.parser")
             logger.info("Extracting announcements for %s.", name)
-            html_parse.extract_announcements(announcement_page, name)
+            html_parse.extract_announcements(announcement_page, name, args.output_dir)
 
         session.close()
         after_loop_action()

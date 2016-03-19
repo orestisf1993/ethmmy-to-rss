@@ -83,18 +83,21 @@ def get_announcement_page_url(course_page, regex=re.compile(r'/eTHMMY/cms\.annou
     return get_absolute_url(course_page.find('a', href=regex).get('href'))
 
 
-def extract_announcements(announcement_page, course_name):
+def extract_announcements(announcement_page, course_name, output_folder):
     """
     Save all announcements from a specified announcement page in rss .xml format in specified file in exported/ folder.
 
     :param announcement_page: The announcement page.
     :param course_name: The course name. Also used for the filename.
+    :type course_name: str
+    :param output_folder: Dir to save the exported .xml to.
+    :type output_folder: str
     :return: None.
     :rtype: None
     """
     from xml.sax.saxutils import escape
-    feed_file_name = os.path.join("exported", course_name + '.xml')
-    os.makedirs("exported", exist_ok=True)
+    feed_file_name = os.path.join(output_folder, course_name + '.xml')
+    os.makedirs(output_folder, exist_ok=True)
     titles = announcement_page.find_all('p', {'class': 'listLabel'})
     logger.debug("Got %d titles for %s.", len(titles), course_name)
 
