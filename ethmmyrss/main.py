@@ -31,15 +31,15 @@ def handle_credentials(username=None, use_keyring=True):
     """
     if username is None:
         password = None
-        msg = 'No credentials found.\n'
+        msg = 'No credentials found.'
     else:
         if use_keyring:
             password = keyring.get_password(constants.KEYRING_SERVICE, username)
         else:
             password = None
-        msg = 'No password found for username {}.\n'.format(username)
+        msg = 'No password found for username {}.'.format(username)
     if not password:
-        print(msg, end='')
+        logger.warning(msg)
         username, password = set_credentials(username, use_keyring=use_keyring)
     return username, password
 
