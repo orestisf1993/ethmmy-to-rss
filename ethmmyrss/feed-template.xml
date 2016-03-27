@@ -14,6 +14,7 @@
                 <link>
                     {{ item.url }}
                 </link>
+                <guid>{{ item.url }}</guid>
                 <description>
                     <![CDATA[{{ item.text }}]]>
                 </description>
