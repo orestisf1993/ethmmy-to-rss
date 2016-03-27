@@ -13,3 +13,4 @@ LOGIN_URL = r'https://alexander.ee.auth.gr:8443/eTHMMY/loginAction.do'
 # %p: Locale’s equivalent of either AM or PM.
 ETHMMY_TIME_FORMAT = r'%d %b %Y %I:%M %p'
 RSS_TIME_FORMAT = r'%a, %d %b %Y %H:%M:%S +0000'
+UUID_FILE_NAME = 'old.pickle'

@@ -1,18 +1,18 @@
 """
 Module that holds functions that handle the parsing of ethmmy pages.
 """
+import logging
 import operator
 import os
 import re
-import logging
 import uuid
+
+import jinja2
 
 try:
     import urlparse
 except ImportError:
     import urllib.parse as urlparse
-
-import jinja2
 
 from . import constants
 from . import timestr
@@ -84,7 +84,20 @@ def get_announcement_page_url(course_page, regex=re.compile(r'/eTHMMY/cms\.annou
     return get_absolute_url(course_page.find('a', href=regex).get('href'))
 
 
-def extract_announcements(announcement_page, course_name, output_folder):
+def decide_item_url(key, uuids):
+    """
+    Decide a unique URL/guid for a feed based on it's key in the uuid dictionary.
+
+    :param key: The key.
+    :param uuids: The uuid dictionary.
+    :return: The URL/guid.
+    """
+    if key not in uuids:
+        uuids[key] = constants.URL_BASE + str(uuid.uuid4())
+    return uuids[key]
+
+
+def extract_announcements(announcement_page, course_name, output_folder, uuids):
     """
     Save all announcements from a specified announcement page in rss .xml format in specified file in exported/ folder.
 
@@ -93,6 +106,8 @@ def extract_announcements(announcement_page, course_name, output_folder):
     :type course_name: str
     :param output_folder: Dir to save the exported .xml to.
     :type output_folder: str
+    :param uuids: UUIDs used in the past.
+    :type uuids: dict
     :return: None.
     :rtype: None
     """
@@ -115,13 +130,13 @@ def extract_announcements(announcement_page, course_name, output_folder):
 
     # Convert messages to HTML strings.
     messages = [str(message).strip() for message in messages]
+    urls = [decide_item_url((title, text, date), uuids) for title, text, date in zip(titles_str, messages, rss_dates)]
 
     feed_items = [
         {
-            'title': title, 'text': text, 'date': date, 'url': constants.URL_BASE + str(uuid.uuid4())
+            'title': title, 'text': text, 'date': date, 'url': url
         }
-        for title, text, date in zip(titles_str, messages, rss_dates)
-    ]
+        for title, text, date, url in zip(titles_str, messages, rss_dates, urls)]
     # Sort according to date list. reverse=True => newer are at the beginning.
     feed_items = [x for (_, x) in sorted(zip(dates, feed_items), key=operator.itemgetter(0), reverse=True)]
 

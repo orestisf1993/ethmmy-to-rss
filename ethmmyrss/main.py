@@ -2,18 +2,19 @@
 """
 Main module with program logic.
 """
-import sys
+import argparse
 import json
 import logging
-import argparse
-
+import pickle
+import sys
 import time
-from bs4 import BeautifulSoup
-import requests
-import keyring  # gnome keyring requires python-secretestorage
 
-from . import html_parse
+import keyring  # gnome keyring requires python-secretestorage
+import requests
+from bs4 import BeautifulSoup
+
 from . import constants
+from . import html_parse
 
 logger = None
 
@@ -201,6 +202,13 @@ def main():
             sys.exit(0)
 
     while True:
+        uuids = {}
+        try:
+            with open(constants.UUID_FILE_NAME, 'rb') as file_obj:
+                uuids = pickle.load(file_obj)
+        except FileNotFoundError:
+            logger.warning("File %s not found", constants.UUID_FILE_NAME)
+
         logger.info("Attempting login.")
         session, response = login(username, password, args.ssl_verify)
 
@@ -216,8 +224,10 @@ def main():
             response = session.get(announcement_url, verify=args.ssl_verify)
             announcement_page = BeautifulSoup(response.text, "html.parser")
             logger.info("Extracting announcements for %s.", name)
-            html_parse.extract_announcements(announcement_page, name, args.output_dir)
+            html_parse.extract_announcements(announcement_page, name, args.output_dir, uuids)
 
+        with open(constants.UUID_FILE_NAME, 'wb') as file_obj:
+            pickle.dump(uuids, file_obj)
         session.close()
         after_loop_action()
 
