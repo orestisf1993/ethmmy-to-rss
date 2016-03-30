@@ -210,8 +210,12 @@ def main():
             logger.warning("File %s not found", constants.UUID_FILE_NAME)
 
         logger.info("Attempting login.")
-        session, response = login(username, password, args.ssl_verify)
-
+        try:
+            session, response = login(username, password, args.ssl_verify)
+        except requests.ConnectionError as exception:
+            logger.error("Got a connection error: " + repr(exception))
+            after_loop_action()
+            continue
         soup = BeautifulSoup(response.text, "html.parser")
         url_texts, urls = html_parse.find_all_course_urls(soup)
         for name, url in zip(url_texts, urls):
